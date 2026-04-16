@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>あなただけの運勢カード</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Noto+Serif+JP:wght@300;400;600&family=Great+Vibes&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+  :root {
+    --gold: #c9a84c;
+    --gold-light: #f0d080;
+    --gold-pale: #fdf3d0;
+    --gold-deep: #8b6914;
+    --cream: #fefaf0;
+    --glass-bg: rgba(255, 248, 220, 0.18);
+    --glass-border: rgba(201, 168, 76, 0.35);
+    --glass-shadow: rgba(139, 105, 20, 0.15);
+    --text-dark: #3a2a0a;
+    --text-mid: #6b4c1e;
+    --petal-pink: #f9c8d4;
+    --petal-lilac: #dfc5f0;
+    --petal-yellow: #fde68a;
+    --petal-white: rgba(255,255,255,0.85);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #fef9e7 0%, #fce4ec 30%, #f3e5f5 60%, #e8f5e9 100%);
+    font-family: 'Noto Serif JP', serif;
+    color: var(--text-dark);
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  /* Floating petals background */
+  .petal-layer {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+  }
+
+  .petal {
+    position: absolute;
+    border-radius: 50% 0 50% 0;
+    opacity: 0.55;
+    animation: floatPetal linear infinite;
+  }
+
+  @keyframes floatPetal {
+    0% { transform: translateY(-60px) rotate(0deg); opacity: 0; }
+    10% { opacity: 0.55; }
+    90% { opacity: 0.4; }
+    100% { transform: translateY(110vh) rotate(720deg) translateX(80px); opacity: 0; }
+  }
+
+  /* Flower meadow at bottom */
+  .meadow {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 180px;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+  }
+
+  .meadow svg { width: 100%; height: 100%; }
+
+  /* Page layout */
+  .page-wrap {
+    position: relative;
+    z-index: 1;
+    max-width: 520px;
+    margin: 0 auto;
+    padding: 40px 20px 200px;
+  }
+
+  /* Header */
+  .site-title {
+    text-align: center;
+    margin-bottom: 36px;
+  }
+
+  .site-title .script {
+    font-family: 'Great Vibes', cursive;
+    font-size: 2.8rem;
+    color: var(--gold);
+    display: block;
+    text-shadow: 0 2px 12px rgba(201,168,76,0.4);
+    line-height: 1;
+  }
+
+  .site-title .sub {
+    font-size: 0.78rem;
+    letter-spacing: 0.25em;
+    color: var(--text-mid);
+    margin-top: 4px;
+    display: block;
+  }
+
+  /* Form card */
+  .form-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(18px) saturate(1.4);
+    -webkit-backdrop-filter: blur(18px) saturate(1.4);
+    border: 1.5px solid var(--glass-border);
+    border-radius: 24px;
+    padding: 32px 28px;
+    box-shadow: 0 8px 40px var(--glass-shadow), inset 0 1px 0 rgba(255,255,255,0.6);
+    margin-bottom: 32px;
+  }
+
+  .form-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--gold-deep);
+    letter-spacing: 0.1em;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .form-title::before, .form-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(to right, transparent, var(--gold-light), transparent);
+  }
+
+  .field {
+    margin-bottom: 20px;
+  }
+
+  label {
+    display: block;
+    font-size: 0.78rem;
+    letter-spacing: 0.18em;
+    color: var(--text-mid);
+    margin-bottom: 8px;
+  }
+
+  input {
+    width: 100%;
+    padding: 12px 16px;
+    background: rgba(255,255,255,0.55);
+    border: 1.5px solid var(--glass-border);
+    border-radius: 12px;
+    font-family: 'Noto Serif JP', serif;
+    font-size: 1rem;
+    color: var(--text-dark);
+    outline: none;
+    transition: border-color 0.25s, box-shadow 0.25s, background 0.25s;
+    -webkit-appearance: none;
+  }
+
+  input:focus {
+    border-color: var(--gold);
+    background: rgba(255,255,255,0.8);
+    box-shadow: 0 0 0 3px rgba(201,168,76,0.18);
+  }
+
+  .btn-generate {
+    width: 100%;
+    padding: 15px;
+    background: linear-gradient(135deg, var(--gold-deep) 0%, var(--gold) 50%, var(--gold-light) 100%);
+    border: none;
+    border-radius: 14px;
+    color: #fff;
+    font-family: 'Noto Serif JP', serif;
+    font-size: 1rem;
+    letter-spacing: 0.2em;
+    cursor: pointer;
+    box-shadow: 0 4px 20px rgba(139,105,20,0.3), inset 0 1px 0 rgba(255,255,255,0.3);
+    transition: transform 0.2s, box-shadow 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .btn-generate::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, transparent 0%, rgba(255,255,255,0.15) 50%, transparent 100%);
+  }
+
+  .btn-generate:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 28px rgba(139,105,20,0.4);
+  }
+
+  .btn-generate:active { transform: translateY(0); }
+
+  /* Fortune Card */
+  #fortune-area { display: none; }
+
+  .fortune-card {
+    background: linear-gradient(145deg, rgba(255,252,235,0.92) 0%, rgba(253,243,208,0.88) 100%);
+    backdrop-filter: blur(24px) saturate(1.6);
+    -webkit-backdrop-filter: blur(24px) saturate(1.6);
+    border: 2px solid var(--gold);
+    border-radius: 28px;
+    padding: 36px 28px 28px;
+    box-shadow:
+      0 0 0 1px rgba(255,255,255,0.5) inset,
+      0 12px 60px rgba(139,105,20,0.2),
+      0 2px 8px rgba(201,168,76,0.3);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .fortune-card::before {
+    content: '';
+    position: absolute;
+    inset: 6px;
+    border: 1px solid rgba(201,168,76,0.3);
+    border-radius: 22px;
+    pointer-events: none;
+  }
+
+  /* Corner ornaments */
+  .corner {
+    position: absolute;
+    width: 48px;
+    height: 48px;
+    opacity: 0.5;
+  }
+  .corner svg { width: 100%; height: 100%; }
+  .corner-tl { top: 10px; left: 10px; }
+  .corner-tr { top: 10px; right: 10px; transform: scaleX(-1); }
+  .corner-bl { bottom: 10px; left: 10px; transform: scaleY(-1); }
+  .corner-br { bottom: 10px; right: 10px; transform: scale(-1); }
+
+  /* Card header */
+  .card-header {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+
+  .card-date-label {
+    font-size: 0.7rem;
+    letter-spacing: 0.25em;
+    color: var(--gold-deep);
+    display: block;
+    margin-bottom: 4px;
+  }
+
+  .card-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 2rem;
+    font-weight: 600;
+    color: var(--text-dark);
+    display: block;
+    line-height: 1.2;
+  }
+
+  .card-birthday {
+    font-size: 0.78rem;
+    color: var(--text-mid);
+    letter-spacing: 0.1em;
+    display: block;
+    margin-top: 4px;
+  }
+
+  /* Divider */
+  .divider {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 18px 0;
+  }
+  .divider::before, .divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(to right, transparent, var(--gold));
+  }
+  .divider::after {
+    background: linear-gradient(to left, transparent, var(--gold));
+  }
+  .divider-icon {
+    color: var(--gold);
+    font-size: 1rem;
+  }
+
+  /* Fortune keyword */
+  .fortune-keyword-wrap {
+    text-align: center;
+    margin: 20px 0;
+  }
+
+  .fortune-label {
+    font-size: 0.68rem;
+    letter-spacing: 0.3em;
+    color: var(--gold-deep);
+    display: block;
+    margin-bottom: 6px;
+  }
+
+  .fortune-keyword {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 2.4rem;
+    font-weight: 600;
+    font-style: italic;
+    background: linear-gradient(135deg, var(--gold-deep), var(--gold), var(--gold-light));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    display: block;
+    line-height: 1.1;
+  }
+
+  /* Stats row */
+  .stats-row {
+    display: flex;
+    gap: 8px;
+    margin: 20px 0;
+    flex-wrap: wrap;
+  }
+
+  .stat-badge {
+    flex: 1;
+    min-width: 80px;
+    background: rgba(255,255,255,0.5);
+    border: 1px solid rgba(201,168,76,0.3);
+    border-radius: 12px;
+    padding: 10px 8px;
+    text-align: center;
+  }
+
+  .stat-icon { font-size: 1.2rem; display: block; margin-bottom: 3px; }
+  .stat-label { font-size: 0.6rem; letter-spacing: 0.12em; color: var(--text-mid); display: block; }
+  .stat-val { font-family: 'Cormorant Garamond', serif; font-size: 1.1rem; font-weight: 600; color: var(--gold-deep); display: block; margin-top: 2px; }
+
+  /* Fortune sections */
+  .fortune-sections {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin: 16px 0;
+  }
+
+  .fortune-section {
+    background: rgba(255,255,255,0.45);
+    border: 1px solid rgba(201,168,76,0.25);
+    border-radius: 14px;
+    padding: 14px 12px;
+  }
+
+  .section-title {
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    color: var(--gold-deep);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-bottom: 8px;
+  }
+
+  .section-body {
+    font-size: 0.82rem;
+    line-height: 1.65;
+    color: var(--text-dark);
+  }
+
+  /* Full-width section */
+  .fortune-section.full {
+    grid-column: 1 / -1;
+  }
+
+  /* Lucky items */
+  .lucky-row {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-top: 6px;
+  }
+
+  .lucky-tag {
+    background: linear-gradient(135deg, rgba(201,168,76,0.15), rgba(240,208,128,0.2));
+    border: 1px solid rgba(201,168,76,0.35);
+    border-radius: 20px;
+    padding: 3px 10px;
+    font-size: 0.75rem;
+    color: var(--gold-deep);
+  }
+
+  /* Score bar */
+  .score-bar-wrap { margin-top: 8px; }
+  .score-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+  .score-name { font-size: 0.7rem; color: var(--text-mid); width: 32px; }
+  .score-track {
+    flex: 1;
+    height: 6px;
+    background: rgba(201,168,76,0.15);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .score-fill {
+    height: 100%;
+    background: linear-gradient(to right, var(--gold-deep), var(--gold-light));
+    border-radius: 3px;
+    transition: width 1s cubic-bezier(0.4,0,0.2,1);
+  }
+  .score-num { font-size: 0.7rem; color: var(--gold-deep); width: 20px; text-align: right; }
+
+  /* Message */
+  .fortune-message {
+    text-align: center;
+    font-size: 0.85rem;
+    line-height: 1.9;
+    color: var(--text-dark);
+    padding: 16px 12px;
+    background: rgba(255,248,220,0.5);
+    border-radius: 14px;
+    border: 1px solid rgba(201,168,76,0.2);
+    margin: 14px 0;
+    font-style: italic;
+  }
+
+  /* Numerology number */
+  .num-circle {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--gold-deep), var(--gold-light));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 8px;
+    box-shadow: 0 4px 16px rgba(139,105,20,0.3);
+  }
+  .num-circle span {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.8rem;
+    font-weight: 600;
+    color: #fff;
+  }
+
+  /* Save button */
+  .btn-save {
+    width: 100%;
+    margin-top: 24px;
+    padding: 13px;
+    background: rgba(255,255,255,0.6);
+    border: 1.5px solid var(--gold);
+    border-radius: 14px;
+    color: var(--gold-deep);
+    font-family: 'Noto Serif JP', serif;
+    font-size: 0.88rem;
+    letter-spacing: 0.18em;
+    cursor: pointer;
+    transition: all 0.25s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .btn-save:hover {
+    background: rgba(201,168,76,0.12);
+    box-shadow: 0 4px 16px rgba(139,105,20,0.2);
+  }
+
+  /* Entrance animation */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .fortune-card { animation: fadeUp 0.7s cubic-bezier(0.4,0,0.2,1) both; }
+
+  /* Sparkle */
+  @keyframes sparkle {
+    0%, 100% { opacity: 0; transform: scale(0.5); }
+    50% { opacity: 1; transform: scale(1.2); }
+  }
+  .sparkle {
+    position: absolute;
+    pointer-events: none;
+    animation: sparkle 2s ease-in-out infinite;
+  }
+
+  /* Mobile refinements */
+  @media (max-width: 400px) {
+    .fortune-keyword { font-size: 2rem; }
+    .fortune-sections { grid-template-columns: 1fr; }
+    .fortune-section.full { grid-column: 1; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Petal layer -->
+<div class="petal-layer" id="petalLayer"></div>
+
+<!-- Meadow -->
+<div class="meadow">
+  <svg viewBox="0 0 800 180" preserveAspectRatio="xMidYMax slice" xmlns="http://www.w3.org/2000/svg">
+    <!-- Ground -->
+    <ellipse cx="400" cy="200" rx="500" ry="80" fill="#d4edda" opacity="0.6"/>
+    <!-- Stems and flowers -->
+    <g opacity="0.9">
+      <!-- Repeating flower groups -->
+      <line x1="60" y1="180" x2="55" y2="110" stroke="#5d8a5e" stroke-width="2"/>
+      <circle cx="55" cy="100" r="12" fill="#f9a8d4" opacity="0.8"/>
+      <circle cx="50" cy="95" r="7" fill="#fde68a"/>
+
+      <line x1="120" y1="180" x2="122" y2="95" stroke="#5d8a5e" stroke-width="2"/>
+      <circle cx="122" cy="85" r="10" fill="#c4b5fd" opacity="0.8"/>
+      <circle cx="119" cy="82" r="6" fill="#fde68a"/>
+
+      <line x1="180" y1="180" x2="178" y2="105" stroke="#5d8a5e" stroke-width="2"/>
+      <circle cx="178" cy="95" r="13" fill="#fca5a5" opacity="0.8"/>
+      <circle cx="175" cy="92" r="7" fill="#fef08a"/>
+
+      <line x1="240" y1="180" x2="243" y2="90" stroke="#5d8a5e" stroke-width="2"/>
+      <circle cx="243" cy="80" r="11" fill="#86efac" opacity="0.8"/>
+      <circle cx="240" cy="77" r="6" fill="#fde68a"/>
+
+      <line x1="300" y1="180" x2="298" y2="100" stroke="#5d8a5e" stroke-width="2"/>
+      <circle cx="298" cy="90" r="14" fill="#f9a8d4" opacity="0.75"/>
+      <circle cx="295" cy="87" r="8" fill="#fef08a"/>
+
+      <line x1="360" y1="180" x2="362" y2="88" stroke="#5d8a5e" stroke-width="2"/>
+      <circle cx="362" cy="78" r="11" fill="#fdba74" opacity="0.8"/>
+      <circle cx="359" cy="75" r="6" fill="#fff"/>
+
+      <line x1="420" y1="180" x2="418" y2="100" stroke="#5d8a5e" stroke-width="2"/>
+      <circle cx="418" cy="90" r="12" fill="#c4b5fd" opacity="0.75"/>
+      <circle cx="415" cy="87" r="7" fill="#fde68a"/>
+
+      <line x1="480" y1="180" x2="482" y2="95" stroke="#5d8a5e" stroke-width="2"/>
+      <circle cx="482" cy="85" r="13" fill="#f9a8d4" opacity="0.8"/>
+      <circle cx="479" cy="82" r="7" fill="#fef08a"/>
+
+      <line x1="540" y1="180" x2="538" y2="105" stroke="#5d8a5e" stroke-width="2"/>
+      <circle cx="538" cy="95" r="10" fill="#fca5a5" opacity="0.8"/>
+      <circle cx="535" cy="92" r="6" fill="#fde68a"/>
+
+      <line x1="600" y1="180" x2="603" y2="92" stroke="#5d8a5e" stroke-width="2"/>
+      <circle cx="603" cy="82" r="14" fill="#86efac" opacity="0.75"/>
+      <circle cx="600" cy="79" r="8" fill="#fef08a"/>
+
+      <line x1="660" y1="180" x2="658" y2="100" stroke="#5d8a5e" stroke-width="2"/>
+      <circle cx="658" cy="90" r="11" fill="#fdba74" opacity="0.8"/>
+      <circle cx="655" cy="87" r="6" fill="#fff"/>
+
+      <line x1="720" y1="180" x2="722" y2="95" stroke="#5d8a5e" stroke-width="2"/>
+      <circle cx="722" cy="85" r="12" fill="#c4b5fd" opacity="0.8"/>
+      <circle cx="719" cy="82" r="7" fill="#fde68a"/>
+
+      <line x1="780" y1="180" x2="778" y2="108" stroke="#5d8a5e" stroke-width="2"/>
+      <circle cx="778" cy="98" r="10" fill="#f9a8d4" opacity="0.8"/>
+      <circle cx="775" cy="95" r="6" fill="#fde68a"/>
+    </g>
+  </svg>
+</div>
+
+<!-- Main content -->
+<div class="page-wrap">
+  <div class="site-title">
+    <span class="script">Fortune Blossom</span>
+    <span class="sub">✦ あなただけの運勢カード ✦</span>
+  </div>
+
+  <!-- Input form -->
+  <div class="form-card">
+    <div class="form-title">✦ 情報を入力 ✦</div>
+    <div class="field">
+      <label>お名前</label>
+      <input type="text" id="inputName" placeholder="例：山田 はな" maxlength="20">
+    </div>
+    <div class="field">
+      <label>生年月日</label>
+      <input type="date" id="inputBirthday">
+    </div>
+    <button class="btn-generate" onclick="generateFortune()">✦ 運勢カードを見る ✦</button>
+  </div>
+
+  <!-- Fortune card -->
+  <div id="fortune-area">
+    <div class="fortune-card" id="fortuneCard">
+      <!-- Corners -->
+      <div class="corner corner-tl">
+        <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M4 44 C4 20 20 4 44 4" stroke="#c9a84c" stroke-width="1.5" fill="none"/>
+          <circle cx="8" cy="8" r="3" fill="#c9a84c"/>
+          <circle cx="40" cy="40" r="2" fill="#c9a84c"/>
+          <path d="M16 16 L8 8 M24 16 L8 24" stroke="#c9a84c" stroke-width="1" opacity="0.5"/>
+        </svg>
+      </div>
+      <div class="corner corner-tr">
+        <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M4 44 C4 20 20 4 44 4" stroke="#c9a84c" stroke-width="1.5" fill="none"/>
+          <circle cx="8" cy="8" r="3" fill="#c9a84c"/>
+          <circle cx="40" cy="40" r="2" fill="#c9a84c"/>
+          <path d="M16 16 L8 8 M24 16 L8 24" stroke="#c9a84c" stroke-width="1" opacity="0.5"/>
+        </svg>
+      </div>
+      <div class="corner corner-bl">
+        <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M4 44 C4 20 20 4 44 4" stroke="#c9a84c" stroke-width="1.5" fill="none"/>
+          <circle cx="8" cy="8" r="3" fill="#c9a84c"/>
+          <circle cx="40" cy="40" r="2" fill="#c9a84c"/>
+          <path d="M16 16 L8 8 M24 16 L8 24" stroke="#c9a84c" stroke-width="1" opacity="0.5"/>
+        </svg>
+      </div>
+      <div class="corner corner-br">
+        <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M4 44 C4 20 20 4 44 4" stroke="#c9a84c" stroke-width="1.5" fill="none"/>
+          <circle cx="8" cy="8" r="3" fill="#c9a84c"/>
+          <circle cx="40" cy="40" r="2" fill="#c9a84c"/>
+          <path d="M16 16 L8 8 M24 16 L8 24" stroke="#c9a84c" stroke-width="1" opacity="0.5"/>
+        </svg>
+      </div>
+
+      <!-- Card content -->
+      <div class="card-header">
+        <span class="card-date-label" id="cardDateLabel">TODAY'S READING</span>
+        <span class="card-name" id="cardName">—</span>
+        <span class="card-birthday" id="cardBirthday">—</span>
+      </div>
+
+      <div class="divider"><span class="divider-icon">✦</span></div>
+
+      <!-- Numerology -->
+      <div style="text-align:center; margin: 16px 0;">
+        <div class="fortune-label">数秘ナンバー</div>
+        <div class="num-circle"><span id="numNumber">—</span></div>
+        <div style="font-family:'Cormorant Garamond',serif; font-size:1rem; color:var(--gold-deep);" id="numTitle">—</div>
+      </div>
+
+      <!-- Keyword -->
+      <div class="fortune-keyword-wrap">
+        <span class="fortune-label">今日のキーワード</span>
+        <span class="fortune-keyword" id="fortuneKeyword">Blossom</span>
+      </div>
+
+      <div class="divider"><span class="divider-icon">✿</span></div>
+
+      <!-- Stats -->
+      <div class="stats-row">
+        <div class="stat-badge">
+          <span class="stat-icon">💫</span>
+          <span class="stat-label">誕生月</span>
+          <span class="stat-val" id="statMonth">—</span>
+        </div>
+        <div class="stat-badge">
+          <span class="stat-icon">🌸</span>
+          <span class="stat-label">誕生曜日</span>
+          <span class="stat-val" id="statDay">—</span>
+        </div>
+        <div class="stat-badge">
+          <span class="stat-icon">✨</span>
+          <span class="stat-label">守護花</span>
+          <span class="stat-val" id="statFlower">—</span>
+        </div>
+      </div>
+
+      <!-- Score bars -->
+      <div class="fortune-section full" style="margin: 6px 0;">
+        <div class="section-title">✦ 今日の運気</div>
+        <div class="score-bar-wrap" id="scoreBars"></div>
+      </div>
+
+      <!-- Fortune sections -->
+      <div class="fortune-sections">
+        <div class="fortune-section">
+          <div class="section-title">💖 恋愛運</div>
+          <div class="section-body" id="fortuneLove">—</div>
+        </div>
+        <div class="fortune-section">
+          <div class="section-title">💰 金運</div>
+          <div class="section-body" id="fortuneMoney">—</div>
+        </div>
+        <div class="fortune-section">
+          <div class="section-title">⚡ 仕事運</div>
+          <div class="section-body" id="fortuneWork">—</div>
+        </div>
+        <div class="fortune-section">
+          <div class="section-title">🌿 健康運</div>
+          <div class="section-body" id="fortuneHealth">—</div>
+        </div>
+
+        <div class="fortune-section full">
+          <div class="section-title">✦ 今日のメッセージ</div>
+          <div class="fortune-message" id="fortuneMessage">—</div>
+        </div>
+
+        <div class="fortune-section full">
+          <div class="section-title">🍀 ラッキーアイテム</div>
+          <div class="lucky-row" id="luckyItems"></div>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div style="text-align:center; margin-top:14px; font-size:0.65rem; letter-spacing:0.2em; color:var(--gold-deep); opacity:0.7;">
+        ✦ Fortune Blossom ✦
+      </div>
+    </div>
+
+    <!-- Save button (outside card for not being captured) -->
+    <button class="btn-save" id="saveBtn" onclick="saveCard()">
+      <span>🌸</span> PNGで保存する
+    </button>
+  </div>
+</div>
+
+<script>
+// ============ Petal generator ============
+(function() {
+  const layer = document.getElementById('petalLayer');
+  const colors = ['#f9c8d4','#dfc5f0','#fde68a','rgba(255,255,255,0.7)','#fca5a5','#fdba74','#86efac'];
+  const count = 22;
+  for (let i = 0; i < count; i++) {
+    const p = document.createElement('div');
+    p.className = 'petal';
+    const size = 8 + Math.random() * 18;
+    p.style.cssText = `
+      width:${size}px; height:${size * 0.7}px;
+      left:${Math.random()*100}%;
+      background:${colors[Math.floor(Math.random()*colors.length)]};
+      animation-duration:${8 + Math.random()*14}s;
+      animation-delay:${-Math.random()*16}s;
+      border-radius:${Math.random()>0.5 ? '50% 0 50% 0' : '0 50% 0 50%'};
+    `;
+    layer.appendChild(p);
+  }
+})();
+
+// ============ Data tables ============
+const WEEKDAYS = ['日','月','火','水','木','金','土'];
+const WEEKDAY_EN = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+
+const MONTH_DATA = {
+  1: { flower:'梅', element:'雪', color:'白銀', keyword:'清廉' },
+  2: { flower:'椿', element:'氷', color:'深紅', keyword:'情熱' },
+  3: { flower:'桜', element:'春風', color:'桜色', keyword:'開花' },
+  4: { flower:'藤', element:'陽光', color:'藤紫', keyword:'繁栄' },
+  5: { flower:'薔薇', element:'草', color:'翠緑', keyword:'成長' },
+  6: { flower:'紫陽花', element:'雨', color:'紺碧', keyword:'変容' },
+  7: { flower:'朝顔', element:'夏', color:'瑠璃', keyword:'情熱' },
+  8: { flower:'向日葵', element:'炎', color:'金', keyword:'輝き' },
+  9: { flower:'彼岸花', element:'秋', color:'朱', keyword:'収穫' },
+  10: { flower:'菊', element:'露', color:'山吹', keyword:'高貴' },
+  11: { flower:'山茶花', element:'霜', color:'紅', keyword:'内省' },
+  12: { flower:'水仙', element:'雪', color:'白金', keyword:'純粋' },
+};
+
+const WEEKDAY_DATA = {
+  0: { planet:'月', lucky:'銀', power:'直感力', boost:'恋愛・創造' },
+  1: { planet:'月', lucky:'銀', power:'直感力', boost:'恋愛・創造' },
+  2: { planet:'火星', lucky:'赤', power:'行動力', boost:'仕事・挑戦' },
+  3: { planet:'水星', lucky:'緑', power:'知性', boost:'学習・コミュニケーション' },
+  4: { planet:'木星', lucky:'紫', power:'拡大運', boost:'金運・幸運' },
+  5: { planet:'金星', lucky:'金', power:'美的感性', boost:'恋愛・芸術' },
+  6: { planet:'土星', lucky:'黒', power:'忍耐力', boost:'基盤・長期運' },
+};
+
+const NUM_DATA = {
+  1: { title:'リーダーの数', desc:'独立心が強く、先駆者の資質をもつあなた。今日はあなたの個性が光を放ちます。' },
+  2: { title:'調和の数', desc:'繊細な感受性と協調性があなたの強み。人との絆が運気を高める一日です。' },
+  3: { title:'創造の数', desc:'表現力豊かで明るいエネルギー。楽しむことが最大の開運アクションです。' },
+  4: { title:'基盤の数', desc:'堅実さと信頼感がキーワード。丁寧に積み重ねた努力が実を結ぶ時です。' },
+  5: { title:'自由の数', desc:'冒険心と好奇心があふれる。新しい体験があなたの世界を広げます。' },
+  6: { title:'愛情の数', desc:'思いやりと美への感性が際立つ。大切な人へのやさしさが幸運を呼びます。' },
+  7: { title:'探求の数', desc:'深い洞察力と精神性が強み。内なる声に耳を傾けることが鍵です。' },
+  8: { title:'豊穣の数', desc:'力強い実行力と物質的な豊かさへの引き寄せ力が高い。大きく動く日。' },
+  9: { title:'完成の数', desc:'広い視野と慈悲の心を持つあなた。手放すことで新たな扉が開きます。' },
+  11: { title:'マスターナンバー 11', desc:'高い直感と霊的なセンスの持ち主。光を放つ日、直感を信じてください。' },
+  22: { title:'マスターナンバー 22', desc:'夢を現実にする力を持つ稀有な数。壮大なビジョンを行動に移すとき。' },
+  33: { title:'マスターナンバー 33', desc:'愛と奉仕の最高峰。あなたの存在自体が周囲の人を癒し、高めます。' },
+};
+
+const KEYWORDS = [
+  'Awakening','Blossom','Radiance','Serenity','Harmony','Abundance',
+  'Grace','Clarity','Renewal','Luminance','Enchant','Flourish',
+  'Ascend','Illuminate','Resonate','Unfold','Bloom','Transcend',
+];
+
+const LOVE_MSGS = [
+  'ときめきの予感。心を開くと素敵な出逢いが近づいています。',
+  '既存の関係がより深まる一日。素直な言葉を伝えてみて。',
+  '自分を愛することが最高の恋愛運。今日は自分磨きデーに。',
+  '心のつながりを大切に。共有する時間が絆を育みます。',
+  '新しいステージへ進む兆し。勇気ある一歩が道を開きます。',
+  '思いやりが伝わる日。小さな親切が大きな愛に育ちます。',
+];
+const MONEY_MSGS = [
+  '堅実な選択が吉。衝動買いを避けると運気アップ。',
+  '思わぬ収入や嬉しい知らせが届くかもしれません。',
+  '投資より貯蓄が吉。積み重ねの力を信じて。',
+  '金運上昇中。価値のあるものへの出費は惜しまずに。',
+  '人脈が金運を呼ぶ日。感謝の気持ちを大切に。',
+  '流れを読む日。急がず焦らず、好機を待ちましょう。',
+];
+const WORK_MSGS = [
+  '集中力が高まる一日。難しい仕事は午前中に片付けて。',
+  '協力者が現れる予感。チームワークを意識して動いて。',
+  '新しいアイデアが閃く日。メモを手放さないで。',
+  '地道な作業が評価される。コツコツと積み重ねましょう。',
+  '決断力が試される場面が。直感を信じると吉。',
+  '学びの機会に積極的に。インプットが未来を変えます。',
+];
+const HEALTH_MSGS = [
+  '体を動かすと運気が上がる日。軽い散歩がおすすめ。',
+  '水分をたっぷりとって。体の内側から整えましょう。',
+  '睡眠が最大の美容と健康法。早めに休んで。',
+  '自然に触れると心が整います。緑を感じる時間を。',
+  'ゆっくり深呼吸。呼吸を整えると全身に活力が戻ります。',
+  '食事を丁寧に。一口一口を大切にする日。',
+];
+const MESSAGES = [
+  '今この瞬間があなたのすべてを変える。\n小さな勇気が大きな奇跡を連れてくる。',
+  '花が咲くのに焦らないように、\nあなたの人生も最良のタイミングで開いていく。',
+  'あなたの光は誰かの道を照らしている。\n自分を信じて、その輝きを放ち続けて。',
+  '手放した先に、新しい美しいものが待っている。\n今日は流れに身を委ねてみよう。',
+  '種を蒔いた日を覚えていますか？\n今日はその芽吹きを感じる日かもしれない。',
+  '宇宙はいつもあなたの味方。\n起きることはすべて、最善の方向へ向かっている。',
+];
+const LUCKY_POOL = [
+  '🌸 桜色のもの','✨ 光るアクセサリー','🍵 温かい飲み物','📖 本・手帳','🌿 植物・緑',
+  '🎵 好きな音楽','💌 手書きの言葉','🪞 鏡・銀色','🌙 月光石','🌻 黄色の花',
+  '🍋 柑橘系の香り','🦋 蝶モチーフ','💎 透明な石','🌊 水のそば','🕯️ キャンドル',
+  '🧴 お気に入りの香水','🌈 虹色のもの','🍀 四つ葉','☕ コーヒー','🌷 チューリップ',
+];
+
+// ============ Numerology ============
+function calcLifeNumber(year, month, day) {
+  const digits = String(year) + String(month).padStart(2,'0') + String(day).padStart(2,'0');
+  let sum = digits.split('').reduce((a,b) => a + parseInt(b), 0);
+  while (sum > 9 && sum !== 11 && sum !== 22 && sum !== 33) {
+    sum = String(sum).split('').reduce((a,b) => a + parseInt(b), 0);
+  }
+  return sum;
+}
+
+// Deterministic random from seed
+function seededRand(seed) {
+  let s = seed;
+  return function() {
+    s = (s * 1664525 + 1013904223) & 0xffffffff;
+    return (s >>> 0) / 0xffffffff;
+  };
+}
+
+function pickN(arr, n, rng) {
+  const copy = [...arr];
+  const result = [];
+  for (let i = 0; i < n && copy.length; i++) {
+    const idx = Math.floor(rng() * copy.length);
+    result.push(copy.splice(idx, 1)[0]);
+  }
+  return result;
+}
+
+// ============ Generate fortune ============
+function generateFortune() {
+  const name = document.getElementById('inputName').value.trim();
+  const birthdayStr = document.getElementById('inputBirthday').value;
+
+  if (!name) { alert('お名前を入力してください'); return; }
+  if (!birthdayStr) { alert('生年月日を入力してください'); return; }
+
+  const bd = new Date(birthdayStr + 'T00:00:00');
+  const year = bd.getFullYear();
+  const month = bd.getMonth() + 1;
+  const day = bd.getDate();
+  const weekday = bd.getDay();
+
+  // Seed: combine birthday digits + name char codes
+  const nameSeed = name.split('').reduce((a,c) => a + c.charCodeAt(0), 0);
+  const seed = year * 10000 + month * 100 + day + nameSeed;
+  const rng = seededRand(seed);
+
+  // Scores (50–95)
+  const scores = {
+    恋: Math.floor(rng() * 46) + 50,
+    金: Math.floor(rng() * 46) + 50,
+    仕: Math.floor(rng() * 46) + 50,
+    健: Math.floor(rng() * 46) + 50,
+  };
+
+  const lifeNum = calcLifeNumber(year, month, day);
+  const numInfo = NUM_DATA[lifeNum] || NUM_DATA[9];
+  const monthInfo = MONTH_DATA[month];
+  const weekInfo = WEEKDAY_DATA[weekday];
+
+  const keyword = KEYWORDS[Math.floor(rng() * KEYWORDS.length)];
+  const lovePick = LOVE_MSGS[Math.floor(rng() * LOVE_MSGS.length)];
+  const moneyPick = MONEY_MSGS[Math.floor(rng() * MONEY_MSGS.length)];
+  const workPick = WORK_MSGS[Math.floor(rng() * WORK_MSGS.length)];
+  const healthPick = HEALTH_MSGS[Math.floor(rng() * HEALTH_MSGS.length)];
+  const messagePick = MESSAGES[Math.floor(rng() * MESSAGES.length)];
+  const luckyPick = pickN(LUCKY_POOL, 3, rng);
+
+  // Today's date
+  const today = new Date();
+  const todayStr = `${today.getFullYear()}.${String(today.getMonth()+1).padStart(2,'0')}.${String(today.getDate()).padStart(2,'0')}`;
+  const bdStr = `${year}年${month}月${day}日（${WEEKDAYS[weekday]}曜日生まれ）`;
+
+  // Populate
+  document.getElementById('cardDateLabel').textContent = todayStr + ' READING';
+  document.getElementById('cardName').textContent = name;
+  document.getElementById('cardBirthday').textContent = bdStr;
+  document.getElementById('numNumber').textContent = lifeNum;
+  document.getElementById('numTitle').textContent = numInfo.title;
+  document.getElementById('fortuneKeyword').textContent = keyword;
+  document.getElementById('statMonth').textContent = monthInfo.flower;
+  document.getElementById('statDay').textContent = WEEKDAYS[weekday]+'曜';
+  document.getElementById('statFlower').textContent = monthInfo.flower;
+  document.getElementById('fortuneLove').textContent = lovePick;
+  document.getElementById('fortuneMoney').textContent = moneyPick;
+  document.getElementById('fortuneWork').textContent = workPick;
+  document.getElementById('fortuneHealth').textContent = healthPick;
+
+  const msg = document.getElementById('fortuneMessage');
+  msg.innerHTML = messagePick.replace(/\n/g, '<br>');
+
+  // Lucky items
+  const luckyContainer = document.getElementById('luckyItems');
+  luckyContainer.innerHTML = luckyPick.map(l => `<span class="lucky-tag">${l}</span>`).join('');
+
+  // Score bars
+  const barContainer = document.getElementById('scoreBars');
+  const scoreLabels = { 恋:'恋愛', 金:'金運', 仕:'仕事', 健:'健康' };
+  barContainer.innerHTML = Object.entries(scores).map(([k, v]) => `
+    <div class="score-row">
+      <span class="score-name">${scoreLabels[k]}</span>
+      <div class="score-track"><div class="score-fill" style="width:0%" data-target="${v}%"></div></div>
+      <span class="score-num">${v}</span>
+    </div>
+  `).join('');
+
+  // Show
+  const area = document.getElementById('fortune-area');
+  area.style.display = 'block';
+
+  // Animate bars
+  setTimeout(() => {
+    document.querySelectorAll('.score-fill').forEach(el => {
+      el.style.width = el.dataset.target;
+    });
+  }, 100);
+
+  // Scroll to card
+  setTimeout(() => {
+    area.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 200);
+}
+
+// ============ Save as PNG ============
+async function saveCard() {
+  const btn = document.getElementById('saveBtn');
+  const originalText = btn.innerHTML;
+  btn.innerHTML = '<span>⏳</span> 生成中…';
+  btn.disabled = true;
+
+  const card = document.getElementById('fortuneCard');
+  try {
+    const canvas = await html2canvas(card, {
+      scale: 2.5,
+      useCORS: true,
+      backgroundColor: null,
+      logging: false,
+    });
+    const link = document.createElement('a');
+    const name = document.getElementById('inputName').value.trim() || 'fortune';
+    link.download = `運勢カード_${name}.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  } catch(e) {
+    alert('保存に失敗しました。もう一度お試しください。');
+    console.error(e);
+  } finally {
+    btn.innerHTML = originalText;
+    btn.disabled = false;
+  }
+}
+
+// Enter key support
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter') generateFortune();
+});
+</script>
+</body>
+</html>
